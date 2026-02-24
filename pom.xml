@@ -18,7 +18,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/dgawlik/signals</url>
+            <url>https://maven.pkg.github.com/dgawlik/Signals</url>
         </repository>
     </distributionManagement>
 

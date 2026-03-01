@@ -11,8 +11,6 @@ import org.dgawlik.signals.etoro.CandlesEndpoint;
 import org.dgawlik.signals.indicator.Series;
 import org.dgawlik.signals.portfolio.Portfolio;
 
-import lombok.var;
-
 public class Simulation {
 
     public record Context(Portfolio portfolio, Map<String, Object> data, List<Quote> lookbehind) {

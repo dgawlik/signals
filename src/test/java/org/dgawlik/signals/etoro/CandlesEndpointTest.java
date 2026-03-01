@@ -3,7 +3,7 @@ package org.dgawlik.signals.etoro;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.dgawlik.signals.EventFrequency;
+import org.dgawlik.signals.Frequency;
 
 public class CandlesEndpointTest {
 
@@ -18,30 +18,6 @@ public class CandlesEndpointTest {
     }
 
     @Test
-    public void test_lookup_instrument_id() {
-        Dotenv e = Dotenv.load();
-
-        var publicKey = e.get("ETORO_PUBLIC_KEY");
-        var apiKey = e.get("ETORO_API_KEY");
-
-        var endpoint = new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
-
-        Assertions.assertEquals(endpoint.lookupInstrumentId("AAPL").get(), 1001);
-    }
-
-    @Test
-    public void test_lookup_instrument_id_failure() {
-        Dotenv e = Dotenv.load();
-
-        var publicKey = e.get("ETORO_PUBLIC_KEY");
-        var apiKey = e.get("ETORO_API_KEY");
-
-        var endpoint = new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
-
-        Assertions.assertFalse(endpoint.lookupInstrumentId("__").isPresent());
-    }
-
-    @Test
     public void fetch_one_day_30() {
         Dotenv e = Dotenv.load();
 
@@ -50,6 +26,15 @@ public class CandlesEndpointTest {
 
         var endpoint = new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
 
-        Assertions.assertEquals(30, endpoint.fetch("AAPL", EventFrequency.ONE_DAY, 30).size());
+        var result = endpoint.fetch(Frequency.ONE_DAY, 30, "AAPL", "TSLA", "EURUSD", "EURGBP", "EURJPY", "EURCHF");
+
+        Assertions.assertEquals(6, result.size());
+
+        Assertions.assertEquals(30, result.get(0).events().size());
+        Assertions.assertEquals(30, result.get(1).events().size());
+        Assertions.assertEquals(30, result.get(2).events().size());
+        Assertions.assertEquals(30, result.get(3).events().size());
+        Assertions.assertEquals(30, result.get(4).events().size());
+        Assertions.assertEquals(30, result.get(5).events().size());
     }
 }

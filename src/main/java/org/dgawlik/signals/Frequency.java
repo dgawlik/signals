@@ -6,7 +6,7 @@ package org.dgawlik.signals;
  * This determines the discrete time steps used by the Timeline during
  * backtesting or live processing.
  */
-public enum EventFrequency {
+public enum Frequency {
 
     TICK("Second"), ONE_MINUTE("OneMinute"),
     FIVE_MINUTES("FiveMinutes"), TEN_MINUTES("TenMinutes"),
@@ -15,7 +15,7 @@ public enum EventFrequency {
 
     private final String name;
 
-    EventFrequency(String name) {
+    Frequency(String name) {
         this.name = name;
     }
 

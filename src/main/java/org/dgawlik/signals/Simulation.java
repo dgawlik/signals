@@ -9,11 +9,13 @@ import java.util.function.Consumer;
 
 import org.dgawlik.signals.etoro.CandlesEndpoint;
 import org.dgawlik.signals.indicator.Series;
+import org.dgawlik.signals.indicator.counters.Counter;
 import org.dgawlik.signals.portfolio.Portfolio;
 
 public class Simulation {
 
-    public record Context(Portfolio portfolio, Map<String, Object> data, List<Quote> lookbehind) {
+    public record Context(Portfolio portfolio, Map<String, Object> data, List<Quote> lookbehind,
+            Map<String, Counter> counters) {
 
     }
 
@@ -24,6 +26,8 @@ public class Simulation {
 
     private final List<SymbolEvents> events;
     private final Frequency frequency;
+
+    private Context initialContext;
 
     private Simulation(Frequency frequency, String... intruments) {
         var candlesEndpoint = CandlesEndpoint.ETORO();
@@ -69,6 +73,12 @@ public class Simulation {
         return this;
     }
 
+    public Simulation onStart(Consumer<Context> strategy) {
+        this.initialContext = new Context(portfolio, new HashMap<>(), new LinkedList<>(), new HashMap<>());
+        strategy.accept(initialContext);
+        return this;
+    }
+
     public Simulation run(Consumer<Context> strategy) {
         if (portfolio == null) {
             throw new IllegalStateException("Portfolio is not set");
@@ -77,7 +87,17 @@ public class Simulation {
         var aggregator = SeriesAggregator.create(0, frequency).addEvents(events);
         var quotes = aggregator.convertToQuotes().stream()
                 .filter(q -> !q.time(frequency).isBefore(from) && !q.time(frequency).isAfter(to)).toList();
-        var data = new HashMap<String, Object>();
+
+        Map<String, Object> data;
+        Map<String, Counter> counters;
+        if (initialContext != null) {
+            data = initialContext.data();
+            counters = initialContext.counters();
+        } else {
+            data = new HashMap<String, Object>();
+            counters = new HashMap<String, Counter>();
+        }
+
         var lookbehindQueue = new LinkedList<Quote>();
 
         for (var quote : quotes) {
@@ -86,7 +106,7 @@ public class Simulation {
             }
             lookbehindQueue.addLast(quote);
 
-            strategy.accept(new Context(portfolio, data, List.copyOf(lookbehindQueue)));
+            strategy.accept(new Context(portfolio, data, List.copyOf(lookbehindQueue), counters));
         }
 
         return this;

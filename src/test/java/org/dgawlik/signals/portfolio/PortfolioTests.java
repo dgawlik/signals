@@ -28,9 +28,9 @@ public class PortfolioTests {
                 Assertions.assertEquals(975, current.cash());
 
                 Assertions.assertEquals(10,
-                                current.getPosition("AAPL").units());
+                                current.getPosition("AAPL").get().units());
                 Assertions.assertEquals(10,
-                                current.getPosition("TSLA").units());
+                                current.getPosition("TSLA").get().units());
 
         }
 
@@ -71,7 +71,7 @@ public class PortfolioTests {
                 Assertions.assertEquals(97.5, current.cash());
 
                 Assertions.assertEquals(897.5,
-                                current.getPosition("AAPL").units());
+                                current.getPosition("AAPL").get().units());
         }
 
         @Test

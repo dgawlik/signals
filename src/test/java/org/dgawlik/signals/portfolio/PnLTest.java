@@ -1,5 +1,6 @@
 package org.dgawlik.signals.portfolio;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -10,8 +11,8 @@ public class PnLTest {
     @Test
     public void test_pnl_basic() {
         var valuations = List.of(
-                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100))),
-                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 10, 110))));
+                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100)), LocalDateTime.MIN),
+                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 10, 110)), LocalDateTime.MIN));
 
         var results = PnL.of(valuations);
 
@@ -24,8 +25,8 @@ public class PnLTest {
     @Test
     public void test_pnl_two_buys() {
         var valuations = List.of(
-                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100))),
-                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 15, 110))));
+                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100)), LocalDateTime.MIN),
+                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 15, 110)), LocalDateTime.MIN));
 
         var results = PnL.of(valuations);
 
@@ -38,8 +39,8 @@ public class PnLTest {
     @Test
     public void test_pnl_buy_and_sell() {
         var valuations = List.of(
-                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100))),
-                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 5, 110))));
+                new Portfolio.Valuation(1000, List.of(new Portfolio.Position("AAPL", 10, 100)), LocalDateTime.MIN),
+                new Portfolio.Valuation(1100, List.of(new Portfolio.Position("AAPL", 5, 110)), LocalDateTime.MIN));
 
         var results = PnL.of(valuations);
 

@@ -1,8 +1,14 @@
 package org.dgawlik.signals.portfolio;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeSet;
 
+import org.dgawlik.signals.Frequency;
 import org.dgawlik.signals.Quote;
 
 public class Portfolio {
@@ -24,7 +30,7 @@ public class Portfolio {
         }
     }
 
-    public record Valuation(double cash, List<Position> positions) {
+    public record Valuation(double cash, List<Position> positions, LocalDateTime time) {
 
         public Valuation {
             if (cash < 0) {
@@ -38,12 +44,8 @@ public class Portfolio {
             positions = List.copyOf(positions);
         }
 
-        public Position getPosition(String symbol) {
-            var found = positions.stream().filter(p -> p.symbol().equals(symbol)).findFirst();
-            if (found.isEmpty()) {
-                throw new IllegalArgumentException("Position not found for symbol: " + symbol);
-            }
-            return found.get();
+        public Optional<Position> getPosition(String symbol) {
+            return positions.stream().filter(p -> p.symbol().equals(symbol)).findFirst();
         }
 
         public double totalValue() {
@@ -107,6 +109,40 @@ public class Portfolio {
             return new Ops(positions, newCash, transactionCosts, quote);
         }
 
+        public Ops rebalance(Map<String, Double> symbolsAndPercentOfPortfolio) {
+            var totalValue = cash
+                    + positions
+                            .stream()
+                            .mapToDouble(p -> p.units() * quote.getCandle(p.symbol()).close())
+                            .sum();
+
+            record Diff(String symbol, double diff) {
+            }
+
+            var sellFirstDiffs = new TreeSet<Diff>(Comparator.comparingDouble(Diff::diff));
+
+            for (var entry : symbolsAndPercentOfPortfolio.entrySet()) {
+                var symbol = entry.getKey();
+                var percent = entry.getValue();
+                var candle = quote.getCandle(symbol);
+                var havingAmount = positions.stream().filter(p -> p.symbol().equals(symbol)).findFirst()
+                        .map(p -> p.units() * candle.close()).orElse(0.0);
+                var amount = totalValue * percent;
+                var diff = amount - havingAmount;
+                sellFirstDiffs.add(new Diff(symbol, diff));
+            }
+
+            var newOps = this;
+            for (var diff : sellFirstDiffs) {
+                if (diff.diff() > 0) {
+                    newOps = newOps.buy(diff.symbol(), diff.diff());
+                } else {
+                    newOps = newOps.sell(diff.symbol(), -diff.diff());
+                }
+            }
+            return newOps;
+        }
+
         public Ops sell(String symbol, double amount) {
             if (!canSell(symbol, amount)) {
                 throw new IllegalArgumentException("Cannot sell position");
@@ -123,7 +159,10 @@ public class Portfolio {
             requestedPosition = new Position(symbol, position.units() - requestedPosition.units(), candle.close());
 
             positions.removeIf(p -> p.symbol().equals(symbol));
-            positions.add(requestedPosition);
+
+            if (requestedPosition.units() > 0) {
+                positions.add(requestedPosition);
+            }
 
             var newCash = cash + amount - transactionCosts;
 
@@ -150,7 +189,7 @@ public class Portfolio {
         }
 
         public void commit() {
-            currentValuation = new Valuation(cash, positions);
+            currentValuation = new Valuation(cash, positions, quote.time(Frequency.TICK));
             history.add(currentValuation);
         }
 
@@ -164,7 +203,7 @@ public class Portfolio {
     private final double transactionCosts;
 
     private Portfolio(double cash, double transactionCosts) {
-        this.currentValuation = new Valuation(cash, List.of());
+        this.currentValuation = new Valuation(cash, List.of(), LocalDateTime.MIN);
         this.transactionCosts = transactionCosts;
         this.history = new ArrayList<>();
         this.history.add(currentValuation);
@@ -186,4 +225,18 @@ public class Portfolio {
         return currentValuation;
     }
 
+    public double value() {
+        return currentValuation().totalValue();
+    }
+
+    public double cash() {
+        return currentValuation().cash();
+    }
+
+    public double value(String symbol) {
+        var position = currentValuation().getPosition(symbol);
+        var units = position.map(Position::units).orElse(0.0);
+        var price = position.map(Position::price).orElse(0.0);
+        return units * price;
+    }
 }

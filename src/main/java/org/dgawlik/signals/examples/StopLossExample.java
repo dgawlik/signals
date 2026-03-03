@@ -1,5 +1,7 @@
 package org.dgawlik.signals.examples;
 
+import java.util.Map;
+
 import org.dgawlik.signals.Frequency;
 import org.dgawlik.signals.Simulation;
 import org.dgawlik.signals.indicator.counters.TrailingStopLoss;
@@ -9,7 +11,7 @@ public class StopLossExample {
 
     public static void main(String[] args) {
         var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA")
-                .withPortfolio(1_000_000, 2.5)
+                .withPortfolio(100_000, 2.5)
                 .withIndicators(new EMA("AAPL", 7), new EMA("AAPL", 24), new EMA("TSLA", 7), new EMA("TSLA", 24))
                 .run(() -> {
 
@@ -38,15 +40,30 @@ public class StopLossExample {
 
                             try {
                                 if (prevEma7Aapl < prevEma24Aapl && ema7Aapl > ema24Aapl) {
-                                    var cash = portfolio.currentValuation().cash();
-                                    portfolio.ops(quote).buy("AAPL", cash / 2 - 10_000).commit();
+                                    var numPositions = portfolio.currentValuation().positions().size();
+
+                                    if (numPositions == 0) {
+                                        portfolio.ops(quote).rebalance(Map.of("AAPL", 0.9)).commit();
+                                    } else {
+                                        portfolio.ops(quote)
+                                                .rebalance(Map.of("AAPL", 0.48, "TSLA", 0.48))
+                                                .commit();
+                                    }
                                     isAaplOn[0] = true;
                                     slAapl.setUp(0.05, quote.getCandle("AAPL").close());
                                 }
 
                                 if (prevEma7Tsla < prevEma24Tsla && ema7Tsla > ema24Tsla) {
-                                    var restOfCash = portfolio.currentValuation().cash();
-                                    portfolio.ops(quote).buy("TSLA", restOfCash / 2 - 10_000).commit();
+                                    var numPositions = portfolio.currentValuation().positions().size();
+
+                                    if (numPositions == 0) {
+                                        portfolio.ops(quote).rebalance(Map.of("TSLA", 0.9)).commit();
+                                    } else {
+                                        portfolio.ops(quote)
+                                                .rebalance(Map.of("AAPL", 0.48, "TSLA", 0.48))
+                                                .commit();
+                                    }
+
                                     isTslaOn[0] = true;
                                     slTsla.setUp(0.05, quote.getCandle("TSLA").close());
                                 }

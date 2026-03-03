@@ -42,7 +42,7 @@ ETORO_API_KEY="<your etoro api key>"
 Here is what MACD following would look like for 7-period and 24-period EMAs.
 
 ```java
-var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA")
+ var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA")
         .withPortfolio(1_000_000, 2.5)
         .withIndicators(new EMA("AAPL", 7), new EMA("AAPL", 24), new EMA("TSLA", 7), new EMA("TSLA", 24))
         .run(() -> {
@@ -50,8 +50,8 @@ var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA"
             var isAaplOn = new Boolean[] { false };
             var isTslaOn = new Boolean[] { false };
 
-            var aaplCounter = new TickCounting();
-            var tslaCounter = new TickCounting();
+            var slAapl = new TrailingStopLoss();
+            var slTsla = new TrailingStopLoss();
 
             return (portfolio, lookbehind) -> {
                 if (lookbehind.size() > 1) {
@@ -72,32 +72,30 @@ var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA"
 
                     try {
                         if (prevEma7Aapl < prevEma24Aapl && ema7Aapl > ema24Aapl) {
-                            portfolio.ops(quote).buy("AAPL", 450_000).commit();
+                            var cash = portfolio.currentValuation().cash();
+                            portfolio.ops(quote).buy("AAPL", cash / 2 - 10_000).commit();
                             isAaplOn[0] = true;
+                            slAapl.setUp(0.05, quote.getCandle("AAPL").close());
                         }
 
                         if (prevEma7Tsla < prevEma24Tsla && ema7Tsla > ema24Tsla) {
-                            portfolio.ops(quote).buy("TSLA", 450_000).commit();
+                            var restOfCash = portfolio.currentValuation().cash();
+                            portfolio.ops(quote).buy("TSLA", restOfCash / 2 - 10_000).commit();
                             isTslaOn[0] = true;
+                            slTsla.setUp(0.05, quote.getCandle("TSLA").close());
                         }
 
                         if (isAaplOn[0]) {
-                            aaplCounter.tick();
-
-                            if (aaplCounter.count() == 10) {
+                            if (slAapl.isHit(quote.getCandle("AAPL").close())) {
                                 portfolio.ops(quote).close("AAPL").commit();
                                 isAaplOn[0] = false;
-                                aaplCounter.reset();
                             }
                         }
 
                         if (isTslaOn[0]) {
-                            tslaCounter.tick();
-
-                            if (tslaCounter.count() == 10) {
+                            if (slTsla.isHit(quote.getCandle("TSLA").close())) {
                                 portfolio.ops(quote).close("TSLA").commit();
                                 isTslaOn[0] = false;
-                                tslaCounter.reset();
                             }
                         }
 

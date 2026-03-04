@@ -3,6 +3,7 @@ package org.dgawlik.signals.portfolio;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -107,6 +108,18 @@ public class Portfolio {
             var newCash = cash - amount - transactionCosts;
 
             return new Ops(positions, newCash, transactionCosts, quote);
+        }
+
+        public Ops rebalanceEqualWeights(double percentOfPortfolio, List<String> symbols) {
+
+            var weight = percentOfPortfolio / symbols.size();
+
+            var rebalanceMap = new HashMap<String, Double>();
+            for (String s : symbols) {
+                rebalanceMap.put(s, weight);
+            }
+
+            return rebalance(rebalanceMap);
         }
 
         public Ops rebalance(Map<String, Double> symbolsAndPercentOfPortfolio) {

@@ -39,7 +39,8 @@ ETORO_API_KEY="<your etoro api key>"
 
 ## First taste
 
-Here is what MACD following would look like for 7-period and 24-period EMAs.
+Here is what MACD trend following would look like for crossover of 7-period and 24-period EMAs. When 7-period
+EMA crosses other from below we buy instrument, set up trailing stop loss and exit when loss is over 5%.
 
 ```java
 var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA", "GOOG", "MSFT")
@@ -127,34 +128,38 @@ var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA"
 
 System.out.println(finalPortfolio.currentValuation().totalValue());
 ```
+Strategy abstract class is absolutely optional here, you can do everthing in plain executor function I just used it
+to better document what the code is doing. I'm planning to add more such helpers but haven't decided yet how they
+should be structured.
 
-You create simulation for particular instruments as here *AAPL* and *TSLA*. Any ticker visible on EToro works.
-Then for those primary signals you can add derivative signals (which are EMAs for now). 
+You create simulation for any particular instruments (as here *AAPL*, *TSLA*, *GOOG* and *MSFT*). They are fetched
+from EToro endpoint under the hood. Any ticker visible on EToro works.
+Then for those primary signals you can add derivative signals (which are EMAs for now, but soon other indicators will follow). 
 
-A strategy is a function acting on portfolio which you get from context. You also have in context the lookbehind quotes
-(a number that is configurable) and Map for storing any custom data between iterations.
+You pass to **run()** method a *supplier* of *consumer*. There is a reason for that, in the supplier you can initialize
+any structures as closure and use it in nested strategy function. Strategy takes in an *portfolio* and *lookbehind* list
+which contains preconfigured range of historical ticks up to now.
 
-Portfolio has ops() method that edits it in place, but each change is recorded. Remember to call commit after doing ops on it. It
+Portfolio has **ops(quote)** method that edits it in place, but each change is recorded. If you ever dealt with **Redux** in js you
+will know the pattern. Portfolio has methods like *buy* or *sell* or more complex *rebalance* which takes percentages of each ticker.
+The idea is to call several ops and then call **commit**. Then the portfolio new state is checked if it is valid.  It
 is very restrictive regarding the operations that cannot be done. Mostly it throws IllegalStateException so you can fallback to
-try catch blocks for quick iterations. 
-
-The result is portfolio evaluated. As mentioned each change records current valuation, you can also call valuation manually. Then
-you can graph how valuations changed between times.
+try catch blocks for quick iterations. Then new portfolio valuation is appended to the history and current valuation is switched. 
 
 ## Concepts
 
-**CandlesEndpoint** is the backbone of the project. It has a singleton method
+**CandlesEndpoint** is the backbone of the project. You can either create it like this:
 
 ```java
-public static CandlesEndpoint ETORO() {
-    Dotenv e = Dotenv.load();
+Dotenv e = Dotenv.load();
 
-    var publicKey = e.get("ETORO_PUBLIC_KEY");
-    var apiKey = e.get("ETORO_API_KEY");
+var publicKey = e.get("ETORO_PUBLIC_KEY");
+var apiKey = e.get("ETORO_API_KEY");
 
-    return new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
-}
+var endpoint = new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
 ```
+
+or use `Candles.ETORO()` singleton which does just that.
 
 when you want to fetch candles you invoke
 
@@ -162,12 +167,12 @@ when you want to fetch candles you invoke
 candlesEndpoint.fetch(Frequency.ONE_DAY, 100, "AAPL", "TSLA")
 ```
 
-for example which is one of many frequencies, number of candles and fetched tickers.
+Frequency is time interval supported by EToro, then follows number of candles (max 1000) and varargs of tickers.
 
 **Event** is anything that happens and can be plotted. It is GADT of three types: 
 * *Candle* with open, close, high, low and volume
-* *indicator* that has val1 through val4 for data (double)
-* *custom* anything that has not been thought of
+* *Indicator* that has val1 through val4 for data (double)
+* *Custom* anything that has not been thought of
 
 **SeriesAggregator** it takes series of events, checks there are no more than configured gaps and produces **Quotes** that are 
 crosssection across all tickers at the momemnt.

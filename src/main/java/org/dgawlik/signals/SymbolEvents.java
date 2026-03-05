@@ -1,24 +1,16 @@
 package org.dgawlik.signals;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
+import org.dgawlik.signals.utils.ArgumentValidator;
 
 public record SymbolEvents(List<? extends Event> events) {
 
     public SymbolEvents {
-
-        if (events == null) {
-            throw new IllegalArgumentException("Events cannot be null");
-        }
-
-        if (events.stream().filter(Objects::isNull).findAny().isPresent()) {
-            throw new IllegalArgumentException("Events cannot contain null values");
-        }
-
-        if (events.isEmpty()) {
-            throw new IllegalArgumentException("Events cannot be empty");
-        }
+        ArgumentValidator.VAL
+                .requireNonNull(events)
+                .requireNonEmpty(events)
+                .requireDoesNotContainNull(events);
     }
 
     public String symbol() {

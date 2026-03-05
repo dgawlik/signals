@@ -17,7 +17,8 @@ public class StopLossExample {
     public static void main(String[] args) {
         var finalPortfolio = Simulation.forInstruments(Frequency.ONE_DAY, "AAPL", "TSLA", "GOOG", "MSFT")
                 .withPortfolio(100_000, 2.5)
-                .withIndicators(new EMA("AAPL", 7),
+                .withIndicators(
+                        new EMA("AAPL", 7),
                         new EMA("AAPL", 24),
                         new EMA("TSLA", 7),
                         new EMA("TSLA", 24),

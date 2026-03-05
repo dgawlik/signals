@@ -11,36 +11,26 @@ import java.util.TreeSet;
 
 import org.dgawlik.signals.Frequency;
 import org.dgawlik.signals.Quote;
+import org.dgawlik.signals.utils.ArgumentValidator;
 
 public class Portfolio {
 
     public record Position(String symbol, double units, double price) {
 
         public Position {
-            if (units < 0) {
-                throw new IllegalArgumentException("Units cannot be negative");
-            }
-
-            if (price < 0) {
-                throw new IllegalArgumentException("Price cannot be negative");
-            }
-
-            if (symbol == null || symbol.isBlank()) {
-                throw new IllegalArgumentException("Symbol cannot be null or empty");
-            }
+            ArgumentValidator.VAL
+                    .requireNonNegative(units)
+                    .requireNonNegative(price)
+                    .requireNotBlank(symbol);
         }
     }
 
     public record Valuation(double cash, List<Position> positions, LocalDateTime time) {
 
         public Valuation {
-            if (cash < 0) {
-                throw new IllegalArgumentException("Cash cannot be negative");
-            }
-
-            if (positions == null) {
-                throw new IllegalArgumentException("Positions cannot be null");
-            }
+            ArgumentValidator.VAL
+                    .requireNonNegative(cash)
+                    .requireNonNull(positions);
 
             positions = List.copyOf(positions);
         }

@@ -3,14 +3,13 @@ package org.dgawlik.signals;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.dgawlik.signals.utils.ArgumentValidator;
+
 public record Quote(
         Map<String, ? extends Event> events) {
 
     public Quote {
-        if (events == null) {
-            throw new IllegalArgumentException("Events cannot be null");
-        }
-
+        ArgumentValidator.VAL.requireNonNull(events);
         events = Map.copyOf(events);
     }
 

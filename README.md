@@ -156,7 +156,7 @@ Dotenv e = Dotenv.load();
 var publicKey = e.get("ETORO_PUBLIC_KEY");
 var apiKey = e.get("ETORO_API_KEY");
 
-var endpoint = new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
+var endpoint = new CandlesEndpoint("https://public-api.etoro.com", apiKey, publicKey);
 ```
 
 or use `Candles.ETORO()` singleton which does just that.

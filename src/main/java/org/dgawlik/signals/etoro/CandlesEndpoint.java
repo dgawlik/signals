@@ -48,7 +48,7 @@ public class CandlesEndpoint {
         var publicKey = e.get("ETORO_PUBLIC_KEY");
         var apiKey = e.get("ETORO_API_KEY");
 
-        return new CandlesEndpoint("https://public-api.etoro.com", publicKey, apiKey);
+        return new CandlesEndpoint("https://public-api.etoro.com", apiKey, publicKey);
     }
 
     public CandlesEndpoint(String baseUrl, String etoroApiKey, String etoroUserKey) {

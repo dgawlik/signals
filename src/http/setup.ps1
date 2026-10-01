@@ -1,3 +1,5 @@
 
-$env:ETORO_PUBLIC_KEY="sdgdskldFPLGfjHn1421dgnlxdGTbngdflg6290bRjslfihsjhSDsdgGHH25hjf"
-$env:ETORO_API_KEY="eyJjaSI6IjYwY2FiYjBiLTU1OTctNDQ4NS04ZjYzLTdlOWUwNTZlMGJiOCIsImVhbiI6IlVucmVnaXN0ZXJlZEFwcGxpY2F0aW9uIiwiZWsiOiJJQndxRVVTMFFUdUZERmE2cWJEQi5kWEJUMXVIQzRSWXloLjM0NWgxYlZKazRUZzFJUy1odFdtakg5c0k0Q3prUW9MVVdzWXJwMnp6Mm1IV2Zjbld6dFZ4clJtSUNNMVRTZW5Zd0hUdWpVY18ifQ__"
+# Do NOT commit real credentials here. Set these from your own secret store,
+# or better, create a local .env file (see README.md) which is already gitignored.
+$env:ETORO_PUBLIC_KEY="<your etoro public key>"
+$env:ETORO_API_KEY="<your etoro api key>"
